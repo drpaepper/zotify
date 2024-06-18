@@ -7,7 +7,7 @@ from librespot.metadata import EpisodeId
 
 from zotify.const import ERROR, ID, ITEMS, NAME, SHOW, DURATION_MS
 from zotify.termoutput import PrintChannel, Printer
-from zotify.utils import create_download_directory, fix_filename
+from zotify.utils import create_download_directory, fix_filename, add_to_directory_episode_ids, get_directory_episode_ids
 from zotify.zotify import Zotify
 from zotify.loader import Loader
 
@@ -81,15 +81,23 @@ def download_episode(episode_id) -> None:
         Printer.print(PrintChannel.SKIPS, '###   SKIPPING: (EPISODE NOT FOUND)   ###')
         prepare_download_loader.stop()
     else:
-        filename = podcast_name + ' - ' + episode_name
-
-        resp = Zotify.invoke_url(
-            'https://api-partner.spotify.com/pathfinder/v1/query?operationName=getEpisode&variables={"uri":"spotify:episode:' + episode_id + '"}&extensions={"persistedQuery":{"version":1,"sha256Hash":"224ba0fd89fcfdfb3a15fa2d82a6112d3f4e2ac88fba5c6713de04d1b72cf482"}}')[1]["data"]["episode"]
-        direct_download_url = resp["audio"]["items"][-1]["url"]
+        filename = podcast_name + ' - ' + episode_name + ' - ' + str(episode_id)
 
         download_directory = PurePath(Zotify.CONFIG.get_root_podcast_path()).joinpath(extra_paths)
         # download_directory = os.path.realpath(download_directory)
         create_download_directory(download_directory)
+
+        episode_id_str = episode_id
+        check_id = episode_id_str in get_directory_episode_ids(download_directory)
+
+        if check_id and Zotify.CONFIG.get_skip_existing():
+            Printer.print(PrintChannel.SKIPS, "\n###   SKIPPING: " + podcast_name + " - " + episode_name + " (EPISODE ALREADY EXISTS)   ###")
+            prepare_download_loader.stop()
+            return
+
+        resp = Zotify.invoke_url(
+            'https://api-partner.spotify.com/pathfinder/v1/query?operationName=getEpisode&variables={"uri":"spotify:episode:' + episode_id + '"}&extensions={"persistedQuery":{"version":1,"sha256Hash":"224ba0fd89fcfdfb3a15fa2d82a6112d3f4e2ac88fba5c6713de04d1b72cf482"}}')[1]["data"]["episode"]
+        direct_download_url = resp["audio"]["items"][-1]["url"]
 
         if "anon-podcast.scdn.co" in direct_download_url or "audio_preview_url" not in resp:
             episode_id = EpisodeId.from_base62(episode_id)
@@ -134,5 +142,12 @@ def download_episode(episode_id) -> None:
         else:
             filepath = PurePath(download_directory).joinpath(f"{filename}.mp3")
             download_podcast_directly(direct_download_url, filepath)
+
+    # add episode id to download directory's .episode_ids file
+    if not check_id:
+        add_to_directory_episode_ids(download_directory, episode_id_str, PurePath(filename).name, podcast_name, episode_name)
+
+    if not Zotify.CONFIG.get_bulk_wait_time():
+        time.sleep(Zotify.CONFIG.get_bulk_wait_time())
 
     prepare_download_loader.stop()

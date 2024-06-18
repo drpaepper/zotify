@@ -36,6 +36,7 @@ PRINT_WARNINGS = 'PRINT_WARNINGS'
 RETRY_ATTEMPTS = 'RETRY_ATTEMPTS'
 CONFIG_VERSION = 'CONFIG_VERSION'
 DOWNLOAD_LYRICS = 'DOWNLOAD_LYRICS'
+PODCAST_DOWNLOAD_SIZE = 'PODCAST_DOWNLOAD_SIZE'
 
 CONFIG_VALUES = {
     SAVE_CREDENTIALS:           { 'default': 'True',  'type': bool, 'arg': '--save-credentials'           },
@@ -68,7 +69,8 @@ CONFIG_VALUES = {
     PRINT_API_ERRORS:           { 'default': 'True',  'type': bool, 'arg': '--print-api-errors'           },
     PRINT_PROGRESS_INFO:        { 'default': 'True',  'type': bool, 'arg': '--print-progress-info'        },
     PRINT_WARNINGS:             { 'default': 'True',  'type': bool, 'arg': '--print-warnings'             },
-    TEMP_DOWNLOAD_DIR:          { 'default': '',      'type': str,  'arg': '--temp-download-dir'          }
+    TEMP_DOWNLOAD_DIR:          { 'default': '',      'type': str,  'arg': '--temp-download-dir'          },
+    PODCAST_DOWNLOAD_SIZE:      { 'default': '0',     'type': int,  'arg': '--podcast-download-size'      },
 }
 
 OUTPUT_DEFAULT_PLAYLIST = '{playlist}/{artist} - {song_name}.{ext}'
@@ -308,3 +310,7 @@ class Config:
     @classmethod
     def get_retry_attempts(cls) -> int:
         return cls.get(RETRY_ATTEMPTS)
+    
+    @classmethod
+    def get_podcast_download_size(cls) -> int:
+        return cls.get(PODCAST_DOWNLOAD_SIZE)

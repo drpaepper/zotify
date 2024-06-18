@@ -125,7 +125,10 @@ def download_from_urls(urls: list[str]) -> bool:
             download_episode(episode_id)
         elif show_id is not None:
             download = True
-            for episode in get_show_episodes(show_id):
+            episodes = get_show_episodes(show_id)
+            if Zotify.CONFIG.get_podcast_download_size() != 0:
+                episodes = episodes[0:Zotify.CONFIG.get_podcast_download_size()]
+            for episode in episodes:
                 download_episode(episode)
 
     return download

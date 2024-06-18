@@ -70,6 +70,18 @@ def get_directory_song_ids(download_path: str) -> List[str]:
 
     return song_ids
 
+def get_directory_episode_ids(download_path: str) -> List[str]:
+    """ Gets episode ids of episodes in directory """
+
+    episode_ids = []
+
+    hidden_file_path = PurePath(download_path).joinpath('.episode_ids')
+    if Path(hidden_file_path).is_file():
+        with open(hidden_file_path, 'r', encoding='utf-8') as file:
+            episode_ids.extend([line.strip().split('\t')[0] for line in file.readlines()])
+
+    return episode_ids
+
 
 def add_to_directory_song_ids(download_path: str, song_id: str, filename: str, author_name: str, song_name: str) -> None:
     """ Appends song_id to .song_ids file in directory """
@@ -80,6 +92,14 @@ def add_to_directory_song_ids(download_path: str, song_id: str, filename: str, a
     with open(hidden_file_path, 'a', encoding='utf-8') as file:
         file.write(f'{song_id}\t{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}\t{author_name}\t{song_name}\t{filename}\n')
 
+def add_to_directory_episode_ids(download_path: str, episode_id: str, filename: str, podcast_name: str, episode_name: str) -> None:
+    """ Appends episode_id to .episode_ids file in directory """
+
+    hidden_file_path = PurePath(download_path).joinpath('.episode_ids')
+    # not checking if file exists because we need an exception
+    # to be raised if something is wrong
+    with open(hidden_file_path, 'a', encoding='utf-8') as file:
+        file.write(f'{episode_id}\t{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}\t{podcast_name}\t{episode_name}\t{filename}\n')
 
 def get_downloaded_song_duration(filename: str) -> float:
     """ Returns the downloaded file's duration in seconds """

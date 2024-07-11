@@ -38,6 +38,8 @@ def get_show_episodes(show_id_str) -> list:
                 f'{SHOWS_URL}/{show_id_str}/episodes', limit=limit, offset=offset)
             offset += limit
             for episode in resp[ITEMS]:
+                if episode is None:
+                    break
                 episodes.append(episode[ID])
             if len(resp[ITEMS]) < limit:
                 break
